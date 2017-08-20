@@ -4,6 +4,7 @@ import sys
 import threading
 import unidecode
 
+
 class Radio:
     stations = [
         {
@@ -25,10 +26,9 @@ class Radio:
     ]
     
     def __init__(self, callback=None):
-        #self.audio_mixer = alsaaudio.Mixer('PCM')
-        
         self.station_index = 3
         self.player = None
+        self.player_active = False
         self.now_playing = ''
         self.thread = threading.Thread(target=self.radio_worker)
 
@@ -37,57 +37,59 @@ class Radio:
         self.thread.start()
 
     def radio_worker(self):
-        while(True):
-            if(self.player is None):
+        while True:
+            if self.player is None:
                 time.sleep(5)
             else:
                 uline = self.player.stdout.readline().decode('UTF-8', 'ignore')
                 line = unidecode.unidecode(uline)
-                if(line == '' or line is None):
+                if line == '' or line is None:
                     break
-                if(line[0:8] == 'ICY Info'):
+                if line[0:8] == 'ICY Info':
                     info = line[10:-1]
-                    [key,value] = info.split('=',1)
-                    if(key == 'StreamTitle'):
-                        self.now_playing = value[1:-2] #Remove '......';
+                    [key, value] = info.split('=', 1)
+                    if key == 'StreamTitle':
+                        self.now_playing = value[1:-2]
                         if self.callback is not None:
                             self.callback()
             
     def play(self):
-        if(self.player is not None):
+        if self.player is not None or self.player_active:
             self.stop()
-        self.player = subprocess.Popen(['mplayer', '-quiet', '-playlist', self.stations[self.station_index]['source']], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        self.now_playing = chr(0)
+        self.callback()
+        self.player = subprocess.Popen(['mplayer', '-quiet', '-playlist', self.stations[self.station_index]['source']],
+                                       stdout=subprocess.PIPE,
+                                       stdin=subprocess.PIPE)
+        self.player_active = True
         
     def stop(self):
-        self.player.terminate();
-        self.player = None
+        if self.player is not None:
+            self.player.terminate()
+            self.player = None
+        self.player_active = False
+        self.now_playing = ''
+        self.callback()
 
     def set_station(self, index):
-        self.stationIndex = index
+        self.station_index = index
         self.stop()
         self.play()
         return self.stations[index]['name']
+
     def next_station(self):
-        if(self.stationIndex + 1 >= len(self.stations)):
-            self.changeStation(0)
+        if self.station_index + 1 >= len(self.stations):
+            self.set_station(0)
         else:
-            self.changeStation(self.stationIndex+1)
-        return self.radio_stationName()
+            self.set_station(self.station_index + 1)
+        return self.get_station()
+
     def prev_station(self):
-        if(self.stationIndex - 1 < 0):
-            self.changeStation(len(self.stations)-1)
+        if self.station_index - 1 < 0:
+            self.set_station(len(self.stations)-1)
         else:
-            self.changeStation(self.stationIndex-1)
-        return self.radio_stationName()
+            self.set_station(self.station_index - 1)
+        return self.get_station()
 
     def get_station(self):
         return [self.station_index, self.stations[self.station_index]['name']]
-
-    def audio_mute(self):
-        self.audio_mixer.setmute(True)
-    def audio_unmute(self):
-        self.audio_mixer.setmute(False)
-    def audio_audio_togglemute(self):
-        self.audio_mixer.setmute(not audio_mixer.getmute()[0])
-
-

@@ -14,25 +14,23 @@ class Main:
         MyIO.Radio.set_playing(self.radio.now_playing)
         
     def __init__(self):
+        self.radio = Radio(self.radio_callback_playing)
         MyIO.setup()
+        MyIO.set_mode(MyIO.Mode.RADIO)
+        MyIO.Radio.set_station(self.radio.get_station()[1])
         MyIO.HDMI.setup()
-
         self.mcu_q = Queue.Queue(maxsize=0)
+        MyIO.MCU.setup(event_q=self.mcu_q)
         self.mcu_thread = threading.Thread(target=self.mcu_listener)
         self.mcu_thread.start()
-        MyIO.MCU.setup(event_q=self.mcu_q)
-
-        MyIO.Amp.set_volume(50)
-
-        self.radio = Radio(self.radio_callback_playing)
-        MyIO.Radio.set_station(self.radio.get_station()[1])
-
-        MyIO.set_mode(MyIO.Mode.RADIO)
         self.radio.play()
 
     def mcu_listener(self):
         while True:
             event_type, data = self.mcu_q.get()
+            print('received event')
+            print(event_type)
+            print(data)
             if event_type == MyIO.Command.BUTTON:
                 btn_num, state = data
                 if btn_num == MyIO.Button.MUTE.value:

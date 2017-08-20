@@ -33,6 +33,9 @@ class Main:
     def mcu_listener(self):
         while True:
             event_type, data = self.mcu_q.get()
+            print('received event')
+            print(event_type)
+            print(data)
             if event_type == MyIO.Command.BUTTON:
                 btn_num, state = data
                 if btn_num == MyIO.Button.MUTE.value:
