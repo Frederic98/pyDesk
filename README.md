@@ -9,3 +9,7 @@ Raspberry pi python desk thing
 * Control with MCU (_Arduino_)
   * Encoder
   * Buttons
+
+### Wishlist
+* Web server
+* WS2812 control (_Through MCU_)
