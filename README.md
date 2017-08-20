@@ -13,3 +13,4 @@ Raspberry pi python desk thing
 ### Wishlist
 * Web server
 * WS2812 control (_Through MCU_)
+* Detect attached HDMI sources
