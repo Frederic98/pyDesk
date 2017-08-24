@@ -1,5 +1,5 @@
 # pyDesk
-Raspberry pi python desk thing
+Raspberry pi python internet radio and more
 
 ### Features:
 * Play radio
